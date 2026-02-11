@@ -31,7 +31,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
 
-
+  console.log('Environment Configuration:', envConfig);
 
   await app.listen(envConfig.PORT || 3000);
   logger.log(`Starting API Gateway service on port: ${envConfig.PORT || 3000}`);
