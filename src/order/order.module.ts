@@ -16,8 +16,8 @@ import { envConfig, NATS_SERVICE } from 'src/config';
           // host: envConfig.ORDERS_MICROSERVICE_HOST,
           // port: envConfig.ORDERS_MICROSERVICE_PORT,
         },
-      }
-    ])
+      },
+    ]),
   ],
 })
 export class OrderModule {}

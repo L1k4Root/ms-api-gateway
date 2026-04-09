@@ -1,16 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, Query, NotFoundException, ParseIntPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { catchError, firstValueFrom } from 'rxjs';
+import { PaginationDTO } from 'src/common';
+import { NATS_SERVICE } from 'src/config';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { NATS_SERVICE } from 'src/config';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { PaginationDTO } from 'src/common';
-import { catchError, firstValueFrom } from 'rxjs';
 
 @Controller('products')
 export class ProductsController {
-  constructor(
-    @Inject(NATS_SERVICE) private readonly client: ClientProxy,
-  ) {}
+  constructor(@Inject(NATS_SERVICE) private readonly client: ClientProxy) {}
 
   @Post()
   create(@Body() createProductDto: CreateProductDto) {
@@ -24,30 +33,21 @@ export class ProductsController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    // OTHER WAY TO HANDLE ERRORS FROM MICROSERVICE  
-    // 
-    // return this.productsClient.send({ cmd: 'getProduct' }, id)
-    // .pipe(
-    //   catchError( err => { throw new RpcException(err.message); } )
-    // );
-
     try {
-      const producto = await firstValueFrom(this.client.send({ cmd: 'getProduct' }, id));
-      return producto;
-      // return this.productsService.findOne(+id);
-      
+      const product = await firstValueFrom(
+        this.client.send({ cmd: 'getProduct' }, id),
+      );
+      return product;
     } catch (error) {
-      // console.log('ERROR ENCONTRED WHILE FETCHING PRODUCT BY ID:', error);
       throw new RpcException(error);
+    }
   }
-}
 
   @Patch(':id')
   patchProduct(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    console.log('Update Product DTO:', updateProductDto);
     return this.client
       .send(
         { cmd: 'updateProduct' },

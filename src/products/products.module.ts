@@ -5,9 +5,6 @@ import { NatsModule } from 'src/nats/nats.module';
 @Module({
   controllers: [ProductsController],
   providers: [],
-  imports: [
-    NatsModule
-  ],
-
+  imports: [NatsModule],
 })
 export class ProductsModule {}

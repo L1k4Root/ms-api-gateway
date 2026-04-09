@@ -1,14 +1,13 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
   Inject,
   Logger,
+  Param,
+  Patch,
   ParseUUIDPipe,
+  Post,
   Query,
 } from '@nestjs/common';
 import {
@@ -17,43 +16,28 @@ import {
   ChangeOrderStatusDto,
 } from './dto';
 import { NATS_SERVICE } from 'src/config';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Controller('order')
 export class OrderController {
+  private readonly logger = new Logger(OrderController.name);
+
   constructor(@Inject(NATS_SERVICE) private readonly client: ClientProxy) {}
 
   @Post()
   create(@Body() createOrderDto: CreateOrderDto) {
-    const logger = new Logger('OrderController');
-    logger.log(`Creating order with data: ${JSON.stringify(createOrderDto)}`);
+    this.logger.log('Creating order');
     return this.client.send('createOrder', createOrderDto);
   }
 
   @Get()
-  async findAll(@Query() paginationDTO: OrderPaginationDTO) {
-    try {
-      console.log("Received pagination parameters:", paginationDTO);
-      const orders = await firstValueFrom(
-        this.client.send('findAllOrders', paginationDTO),
-      );
-      console.log(orders);
-      return orders;
-    } catch (error) {
-      console.log(error);
-      throw new RpcException(error);
-    }
+  findAll(@Query() paginationDTO: OrderPaginationDTO) {
+    return this.client.send('findAllOrders', paginationDTO);
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    try {
-      const order = await firstValueFrom(this.client.send('findOneOrder', id));
-      return order;
-    } catch (error) {
-      throw new RpcException(error);
-    }
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.client.send('findOneOrder', id);
   }
 
   @Patch('change-status/:id')
@@ -65,5 +49,10 @@ export class OrderController {
       id,
       status: changeOrderStatusDto.status,
     });
+  }
+
+  @Post('test-pay-success')
+  testPaySuccess(@Body() payload: Record<string, unknown>) {
+    return this.client.send('payment.suceeded', payload);
   }
 }
